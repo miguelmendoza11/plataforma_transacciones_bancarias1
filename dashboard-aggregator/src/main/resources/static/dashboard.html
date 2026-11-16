@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ledger en tiempo real</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #f6f7f9; color: #1d2330; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: .5rem .75rem; border-bottom: 1px solid #e3e6eb; text-align: left; }
+    tr.sospechosa { background: #fde2e2; color: #a40000; font-weight: 600; }
+    #estado { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Ledger de transacciones</h1>
+  <div id="estado">Conectando...</div>
+  <table>
+    <thead><tr><th>tx_id</th><th>De</th><th>Para</th><th>Monto</th><th>Estado</th><th>Fraude</th></tr></thead>
+    <tbody id="filas"></tbody>
+  </table>
+  <script>
+    // TODO (Juanse): ajustar al formato de mensaje que defina el backend.
+    const ws = new WebSocket(`ws://${location.hostname || 'localhost'}:8081/ws/transactions`);
+    const filas = document.getElementById('filas');
+    const estado = document.getElementById('estado');
+    ws.onopen = () => estado.textContent = 'Conectado';
+    ws.onclose = () => estado.textContent = 'Desconectado';
+    ws.onmessage = (msg) => {
+      const tx = JSON.parse(msg.data);
+      let fila = document.getElementById(tx.tx_id);
+      if (!fila) {
+        fila = document.createElement('tr');
+        fila.id = tx.tx_id;
+        filas.prepend(fila);
+      }
+      fila.className = tx.sospechosa ? 'sospechosa' : '';
+      fila.innerHTML = '';
+      [tx.tx_id, tx.from_user, tx.to_user, '$' + tx.amount, tx.status, tx.motivo_fraude || '']
+        .forEach(v => { const td = document.createElement('td'); td.textContent = v ?? ''; fila.appendChild(td); });
+    };
+  </script>
+</body>
+</html>
