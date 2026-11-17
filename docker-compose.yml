@@ -1,0 +1,183 @@
+# Plataforma de Transacciones Bancarias - Ledger de Eventos
+# Uso:  docker compose up --build
+#
+# Redes:
+#   backend  -> internal: true  (persistencia + mensajeria, sin salida al exterior)
+#   frontend -> bridge con puertos publicados (API, dashboard, consola RabbitMQ)
+
+x-spring-env: &spring-env
+  RABBITMQ_HOST: rabbitmq
+  KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+  DB_HOST: postgres-db
+  DB_NAME: ledger
+  DB_USER: ledger
+  DB_PASSWORD: ledger
+
+x-limits-small: &limits-small
+  resources:
+    limits:
+      cpus: '0.50'
+      memory: 384M
+
+x-limits-medium: &limits-medium
+  resources:
+    limits:
+      cpus: '0.75'
+      memory: 512M
+
+services:
+  # ======================= INFRAESTRUCTURA =======================
+  postgres-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ledger
+      POSTGRES_USER: ledger
+      POSTGRES_PASSWORD: ledger
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledger -d ledger"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    networks: [backend]
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+    networks: [backend]
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on: [zookeeper]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+    networks: [backend]
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "15672:15672"   # consola de administracion (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+    networks: [backend, frontend]
+
+  # ======================= MICROSERVICIOS =======================
+  transaction-api:
+    build: { context: ., dockerfile: transaction-api/Dockerfile }
+    environment: *spring-env
+    ports: ["8080:8080"]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    deploy: *limits-small
+    networks: [backend, frontend]
+
+  transaction-processor:
+    build: { context: ., dockerfile: transaction-processor/Dockerfile }
+    environment: *spring-env
+    depends_on:
+      postgres-db: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+    networks: [backend]
+
+  fraud-detector:
+    build: { context: ., dockerfile: fraud-detector/Dockerfile }
+    environment: *spring-env
+    depends_on:
+      postgres-db: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+    deploy: *limits-medium
+    networks: [backend]
+
+  dashboard-aggregator:
+    build: { context: ., dockerfile: dashboard-aggregator/Dockerfile }
+    environment: *spring-env
+    ports: ["8081:8081"]   # WebSocket + dashboard.html (http://localhost:8081/dashboard.html)
+    depends_on:
+      kafka: { condition: service_healthy }
+    deploy: *limits-medium
+    networks: [backend, frontend]
+
+  notification-router:
+    build: { context: ., dockerfile: notification-router/Dockerfile }
+    environment: *spring-env
+    depends_on:
+      kafka: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    deploy: *limits-small
+    networks: [backend]
+
+  ad-generator:
+    build: { context: ., dockerfile: ad-generator/Dockerfile }
+    environment: *spring-env
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    deploy: *limits-small
+    networks: [backend]
+
+  email-worker:
+    build: { context: ., dockerfile: email-worker/Dockerfile }
+    environment: *spring-env
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    deploy:
+      replicas: 3          # escalabilidad horizontal: 3 workers compitiendo en email_queue
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 384M
+    networks: [backend]
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
+    driver: bridge
+    internal: true
+  frontend:
+    driver: bridge
