@@ -18,6 +18,8 @@ spring:
     hibernate:
       ddl-auto: update   # TODO: cambiar a validate cuando haya script SQL definitivo
     open-in-view: false
+ledger:
+  monto-maximo: 100000   # maximo por transferencia; $20.000 se completa y lo marca el fraude
 management:
   endpoints:
     web:

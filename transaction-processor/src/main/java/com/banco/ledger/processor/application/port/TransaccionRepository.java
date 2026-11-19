@@ -1,10 +1,17 @@
 package com.banco.ledger.processor.application.port;
 
+import com.banco.ledger.contracts.TxId;
+import com.banco.ledger.processor.domain.model.Transaccion;
+
 /**
- * Puerto de persistencia (DIP). La implementacion (adaptador JPA) vive en
+ * Puerto de persistencia de transacciones (DIP). La implementacion (adaptador JPA) vive en
  * infrastructure/persistence y traduce Transaccion <-> TransaccionJpaEntity.
- *
- * TODO (Miguel): void guardar(Transaccion tx); Optional<Transaccion> buscarPorId(TxId id);
+ * El caso de uso solo conoce esta interfaz, no PostgreSQL.
  */
 public interface TransaccionRepository {
+
+    void guardar(Transaccion tx);
+
+    /** Para la idempotencia: RabbitMQ puede reentregar el mismo comando. */
+    boolean existe(TxId id);
 }
