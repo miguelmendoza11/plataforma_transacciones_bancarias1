@@ -29,8 +29,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -129,5 +131,63 @@ class ProcesarTransferenciaServiceTest {
         verify(transaccionRepository, times(1)).guardar(any(Transaccion.class));
         verify(publisher, times(1)).publicar(evento.capture());
         assertThat(evento.getValue().status()).isEqualTo(EstadoTransaccion.COMPLETED);
+    }
+
+    @Test
+    @DisplayName("Fondos insuficientes: publica REJECTED con INSUFFICIENT_FUNDS y no guarda ninguna cuenta")
+    void fondosInsuficientesPublicaRejected() {
+        // Arrange
+        CuentaBancaria origen = CuentaBancaria.abrir("A", Saldo.de("10.00"));
+        CuentaBancaria destino = CuentaBancaria.abrir("B", Saldo.de("0.00"));
+        when(transaccionRepository.existe(TX_ID)).thenReturn(false);
+        when(cuentaRepository.buscarPorUsuario("A")).thenReturn(Optional.of(origen));
+        when(cuentaRepository.buscarPorUsuario("B")).thenReturn(Optional.of(destino));
+        ArgumentCaptor<TransactionEventRecord> evento = ArgumentCaptor.forClass(TransactionEventRecord.class);
+
+        // Act
+        service.procesar(comando("50"));
+
+        // Assert
+        verify(transaccionRepository, times(1)).guardar(any(Transaccion.class));
+        verify(publisher, times(1)).publicar(evento.capture());
+        assertThat(evento.getValue().status()).isEqualTo(EstadoTransaccion.REJECTED);
+        assertThat(evento.getValue().reason()).isEqualTo("INSUFFICIENT_FUNDS");
+        verify(cuentaRepository, never()).guardar(any(CuentaBancaria.class));
+        assertThat(origen.saldo()).isEqualTo(Saldo.de("10.00"));
+    }
+
+    @Test
+    @DisplayName("Cuenta inexistente: publica REJECTED con ACCOUNT_NOT_FOUND")
+    void cuentaInexistentePublicaRejected() {
+        // Arrange
+        when(transaccionRepository.existe(TX_ID)).thenReturn(false);
+        when(cuentaRepository.buscarPorUsuario("A")).thenReturn(Optional.of(CuentaBancaria.abrir("A", Saldo.de("100.00"))));
+        when(cuentaRepository.buscarPorUsuario("B")).thenReturn(Optional.empty());
+        ArgumentCaptor<TransactionEventRecord> evento = ArgumentCaptor.forClass(TransactionEventRecord.class);
+
+        // Act
+        service.procesar(comando("50"));
+
+        // Assert
+        verify(transaccionRepository, times(1)).guardar(any(Transaccion.class));
+        verify(publisher, times(1)).publicar(evento.capture());
+        assertThat(evento.getValue().status()).isEqualTo(EstadoTransaccion.REJECTED);
+        assertThat(evento.getValue().reason()).isEqualTo("ACCOUNT_NOT_FOUND");
+        verify(cuentaRepository, never()).guardar(any(CuentaBancaria.class));
+    }
+
+    @Test
+    @DisplayName("tx_id repetido (reentrega de RabbitMQ): no se reprocesa ni se publica")
+    void txIdRepetidoNoSeReprocesa() {
+        // Arrange
+        when(transaccionRepository.existe(TX_ID)).thenReturn(true);
+
+        // Act
+        service.procesar(comando("50"));
+
+        // Assert
+        verifyNoInteractions(publisher);
+        verifyNoInteractions(cuentaRepository);
+        verify(transaccionRepository, never()).guardar(any(Transaccion.class));
     }
 }
