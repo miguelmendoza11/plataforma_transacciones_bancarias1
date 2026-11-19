@@ -27,6 +27,18 @@ public sealed interface EstadoTransaccionState
         return new Recibida();
     }
 
+    /**
+     * Rehidrata el estado a partir de su nombre persistido (ej. desde PostgreSQL).
+     *
+     * @throws IllegalArgumentException si el nombre es nulo
+     */
+    static EstadoTransaccionState desde(EstadoTransaccion nombre) {
+        if (nombre == null) {
+            throw new IllegalArgumentException("El nombre del estado no puede ser nulo");
+        }
+        return CatalogoEstados.buscar(nombre);
+    }
+
     default EstadoTransaccionState iniciarProcesamiento() {
         throw new TransicionInvalidaException("iniciar el procesamiento de", nombre());
     }
