@@ -1,16 +1,16 @@
 package com.banco.ledger.processor.domain.validation;
 
+import com.banco.ledger.processor.domain.model.CuentaBancaria;
+import com.banco.ledger.processor.domain.model.Transaccion;
+
 /**
  * PATRON STRATEGY - reglas de validacion de riesgo intercambiables.
  *
- * TODO (Miguel):
- *  - Definir que recibe la regla (ej. Transaccion + CuentaBancaria origen) y que devuelve
- *    (ej. un record ResultadoValidacion(boolean aprobada, String motivo)).
- *  - Implementaciones sugeridas: FondosSuficientesRule, MontoMaximoPorTransaccionRule,
- *    CuentaActivaRule.
- *  - El servicio recibe List<ReglaValidacion> por constructor (Spring inyecta todas las
- *    implementaciones) -> agregar reglas nuevas sin tocar el procesador (Open/Closed).
+ * Cada regla es un algoritmo independiente que decide si una transaccion puede ejecutarse.
+ * El servicio recibe List&lt;ReglaValidacion&gt; por constructor y las evalua todas sin saber
+ * cuales son: agregar una regla nueva no obliga a tocar el procesador (Open/Closed).
  */
 public interface ReglaValidacion {
-    // TODO: ResultadoValidacion evaluar(Transaccion tx, CuentaBancaria origen);
+
+    ResultadoValidacion evaluar(Transaccion tx, CuentaBancaria origen);
 }
