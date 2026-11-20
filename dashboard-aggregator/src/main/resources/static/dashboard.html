@@ -8,8 +8,13 @@
     body { font-family: system-ui, sans-serif; margin: 2rem; background: #f6f7f9; color: #1d2330; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th, td { padding: .5rem .75rem; border-bottom: 1px solid #e3e6eb; text-align: left; }
+    td.monto { text-align: right; font-variant-numeric: tabular-nums; }
     tr.sospechosa { background: #fde2e2; color: #a40000; font-weight: 600; }
-    #estado { margin-bottom: 1rem; }
+    tr.rechazada { color: #6b7280; }
+    #estado { display: inline-block; margin-bottom: 1rem; padding: .25rem .75rem; border-radius: 999px;
+              background: #e5e7eb; font-weight: 600; }
+    #estado.conectado { background: #dcfce7; color: #166534; }
+    #estado.desconectado { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -20,25 +25,44 @@
     <tbody id="filas"></tbody>
   </table>
   <script>
-    // TODO (Juanse): ajustar al formato de mensaje que defina el backend.
-    const ws = new WebSocket(`ws://${location.hostname || 'localhost'}:8081/ws/transactions`);
+    // Mensajes del backend: { tx_id, from_user, to_user, amount, status, sospechosa, motivo_fraude }
     const filas = document.getElementById('filas');
     const estado = document.getElementById('estado');
-    ws.onopen = () => estado.textContent = 'Conectado';
-    ws.onclose = () => estado.textContent = 'Desconectado';
-    ws.onmessage = (msg) => {
-      const tx = JSON.parse(msg.data);
+    const formatoMonto = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function pintar(tx) {
+      // una fila por tx_id: si ya existe se actualiza (ej. cuando llega la alerta de fraude)
       let fila = document.getElementById(tx.tx_id);
       if (!fila) {
         fila = document.createElement('tr');
         fila.id = tx.tx_id;
         filas.prepend(fila);
       }
-      fila.className = tx.sospechosa ? 'sospechosa' : '';
+      fila.className = tx.sospechosa ? 'sospechosa' : (tx.status === 'REJECTED' ? 'rechazada' : '');
       fila.innerHTML = '';
-      [tx.tx_id, tx.from_user, tx.to_user, '$' + tx.amount, tx.status, tx.motivo_fraude || '']
-        .forEach(v => { const td = document.createElement('td'); td.textContent = v ?? ''; fila.appendChild(td); });
-    };
+      const celdas = [tx.tx_id, tx.from_user, tx.to_user, '$' + formatoMonto.format(tx.amount),
+                      tx.status, tx.sospechosa ? tx.motivo_fraude : ''];
+      celdas.forEach((v, i) => {
+        const td = document.createElement('td');
+        td.textContent = v ?? '';
+        if (i === 3) td.className = 'monto';
+        fila.appendChild(td);
+      });
+    }
+
+    function conectar() {
+      const ws = new WebSocket(`ws://${location.hostname || 'localhost'}:8081/ws/transactions`);
+      ws.onopen = () => { estado.textContent = 'Conectado'; estado.className = 'conectado'; };
+      ws.onmessage = (msg) => pintar(JSON.parse(msg.data));
+      ws.onclose = () => {
+        estado.textContent = 'Desconectado (reintentando...)';
+        estado.className = 'desconectado';
+        // al reconectar el servidor vuelve a mandar el snapshot
+        setTimeout(conectar, 3000);
+      };
+    }
+
+    conectar();
   </script>
 </body>
 </html>
