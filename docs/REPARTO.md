@@ -65,7 +65,7 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 
 ## Flujo de Git
 
-- Una rama por persona/servicio (`feature/processor`, `feature/dashboard`, …) → Pull Request a `main`.
+- Una rama por persona/servicio (`feature/processor`, `feature/dashboard`, …) → Pull Request a `Develop`.
 - `mvn test` debe pasar antes de cada merge.
 - Cambios en `common-contracts` o `docker-compose.yml` siempre por PR revisado por otro integrante.
 
