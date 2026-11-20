@@ -1,7 +1,2 @@
-/**
- * TODO (Juanse):
- *  - SolicitarTransferenciaService (@Service, constructor con TransferCommandPublisher):
- *    TransferRequest -> TransferCommandRecord (TxId.nuevo(), Instant.now()) -> publicar -> devolver tx_id.
- *  - Prueba Mockito: verify(publisher, times(1)).publicar(argThat(...)).
- */
+/** Casos de uso de transaction-api y sus puertos de salida. */
 package com.banco.ledger.api.application;
