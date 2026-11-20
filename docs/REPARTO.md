@@ -31,13 +31,13 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 
 ## 🟡 Juanse — `transaction-api` + `dashboard-aggregator` + `dashboard.html`
 
-- [ ] `POST /transfer` → `TransferCommandRecord` con validación Fail-Fast → 202 con `tx_id`; errores → 400 (`@RestControllerAdvice`).
-- [ ] Adaptador `RabbitTransferCommandPublisher` (cola `transfer_commands`).
-- [ ] Vista materializada en memoria (lado *Query* de CQRS) con dos `@KafkaListener` (`transactions_log`, `fraud_alerts`).
-- [ ] Caso borde: alerta que llega antes que la transacción (no hay orden entre topics).
-- [ ] WebSocket en `:8081` (`/ws/transactions`): snapshot al conectar + cambios incrementales.
-- [ ] Terminar `dashboard.html` (ya tiene base): filas en rojo para sospechosas; opcional, formulario para enviar transferencias.
-- [ ] Pruebas: `TransferRequest` inválidos, servicio con Mockito, vista materializada pura.
+- [x] `POST /transfer` → `TransferCommandRecord` con validación Fail-Fast → 202 con `tx_id`; errores → 400 (`@RestControllerAdvice`).
+- [x] Adaptador `RabbitTransferCommandPublisher` (cola `transfer_commands`, declarada con la misma Dead Letter Queue que el processor).
+- [x] Vista materializada en memoria (lado *Query* de CQRS) con dos `@KafkaListener` (`transactions_log`, `fraud_alerts`).
+- [x] Caso borde: alerta que llega antes que la transacción (no hay orden entre topics); se guarda como pendiente dentro de `compute()`.
+- [x] WebSocket en `:8081` (`/ws/transactions`): snapshot al conectar + cambios incrementales.
+- [x] Terminar `dashboard.html` (ya tiene base): filas en rojo para sospechosas con su motivo; formulario para enviar transferencias (CORS en la API).
+- [x] Pruebas: `TransferRequest` inválidos, servicios con Mockito, vista materializada pura (incluida una prueba concurrente) y adaptadores (Rabbit, listeners, WebSocket).
 
 **Para la sustentación:** comunicación síncrona vs. asíncrona, *consumer groups*, push vía WebSocket, consistencia eventual.
 
