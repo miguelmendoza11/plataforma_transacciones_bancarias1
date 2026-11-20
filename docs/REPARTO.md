@@ -11,19 +11,19 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 ## 🔴 Miguel — `transaction-processor` + `fraud-detector` + modelo de datos
 
 **transaction-processor** (el núcleo)
-- [ ] `Transaccion` y `CuentaBancaria` como entidades ricas (`debitar()`, `acreditar()`, `ejecutarTransferencia()`, `rechazarPorFondosInsuficientes()`, `marcarComoSospechosa()`).
-- [ ] **Patrón State**: `Recibida → Procesando → Completada | Rechazada`, `Completada → Sospechosa`, sin `if/switch` (interfaz `sealed`).
-- [ ] **Patrón Strategy**: `ReglaValidacion` (fondos suficientes, monto máximo, cuenta activa) inyectada como `List<ReglaValidacion>`.
-- [ ] Puertos `TransaccionRepository`, `CuentaRepository`, `LedgerEventPublisher` y sus adaptadores (JPA + Kafka).
-- [ ] Entidades JPA separadas del dominio + mappers; cuentas semilla con saldo inicial.
-- [ ] `@Version` en cuentas (bloqueo optimista) e **idempotencia** por `tx_id` ante reentregas de RabbitMQ.
-- [ ] Publicar en `transactions_log` con `tx_id` como key.
-- [ ] Pruebas: todas las transiciones del State (válidas e `IllegalStateException`), invariantes de saldo, y Mockito con `verify(repo, times(1))` + `verify(publisher, times(1))`.
+- [x] `Transaccion` y `CuentaBancaria` como entidades ricas (`debitar()`, `acreditar()`, `ejecutarTransferencia()`, `rechazarPorFondosInsuficientes()`, `marcarComoSospechosa()`).
+- [x] **Patrón State**: `Recibida → Procesando → Completada | Rechazada`, `Completada → Sospechosa`, sin `if/switch` (interfaz `sealed`).
+- [x] **Patrón Strategy**: `ReglaValidacion` (fondos suficientes, monto máximo; la cuenta inexistente se rechaza con `ACCOUNT_NOT_FOUND`) inyectada como `List<ReglaValidacion>`.
+- [x] Puertos `TransaccionRepository`, `CuentaRepository`, `LedgerEventPublisher` y sus adaptadores (JPA + Kafka).
+- [x] Entidades JPA separadas del dominio + mappers; cuentas semilla con saldo inicial.
+- [x] `@Version` en cuentas (bloqueo optimista) e **idempotencia** por `tx_id` ante reentregas de RabbitMQ.
+- [x] Publicar en `transactions_log` con `tx_id` como key.
+- [x] Pruebas: todas las transiciones del State (válidas e `IllegalStateException`), invariantes de saldo, y Mockito con `verify(repo, times(1))` + `verify(publisher, times(1))`.
 
 **fraud-detector** (stateful)
-- [ ] `ReglaFraude` (Strategy): `AltoValorRule` (> $10.000) y `FrecuenciaAnomalaRule` (ventana deslizante en memoria, `ConcurrentHashMap`).
-- [ ] Persistir alertas (`AlertaFraude` / `RegistroAuditoria`) en PostgreSQL y publicar en `fraud_alerts`.
-- [ ] Pruebas de cada regla (incluida la ventana de tiempo con un `Clock` inyectado) y del servicio con Mockito.
+- [x] `ReglaFraude` (Strategy): `AltoValorRule` (> $10.000) y `FrecuenciaAnomalaRule` (ventana deslizante en memoria, `ConcurrentHashMap`).
+- [x] Persistir alertas (`AlertaFraude` / `RegistroAuditoria`) en PostgreSQL y publicar en `fraud_alerts`.
+- [x] Pruebas de cada regla (la ventana usa la hora del evento; el servicio usa un `Clock` inyectado) y del servicio con Mockito.
 
 **Para la sustentación:** CQRS/Event Sourcing, por qué Kafka es la fuente de verdad, garantías *at-least-once* + idempotencia, condiciones de carrera y bloqueo optimista.
 
