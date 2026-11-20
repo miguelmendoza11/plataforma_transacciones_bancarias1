@@ -32,8 +32,8 @@ POST /transfer
 | `common-contracts` | Records inmutables compartidos (`TransferCommandRecord`, `TransactionEventRecord`, `FraudAlertRecord`, `EmailCommandRecord`, `MontoDinero`, `TxId`) | Todos | ✅ Hecho |
 | `transaction-processor` | Rabbit → dominio rico (State/Strategy) → PostgreSQL → Kafka | **Miguel** | ✅ Hecho |
 | `fraud-detector` | Kafka stateful + Strategy → PostgreSQL → Kafka | **Miguel** | ✅ Hecho |
-| `transaction-api` | REST → RabbitMQ | Juanse | 🟡 Esqueleto |
-| `dashboard-aggregator` | Kafka (2 topics) → vista materializada → WebSocket | Juanse | 🟡 Esqueleto |
+| `transaction-api` | REST → RabbitMQ | Juanse | ✅ Hecho |
+| `dashboard-aggregator` | Kafka (2 topics) → vista materializada → WebSocket | Juanse | ✅ Hecho |
 | `notification-router` | Kafka → RabbitMQ | Andrés | 🟡 Esqueleto |
 | `ad-generator` | Tarea programada → RabbitMQ | Andrés | 🟡 Esqueleto |
 | `email-worker` | RabbitMQ consumer (servicio de **referencia**) | Andrés | ✅ Hecho |
