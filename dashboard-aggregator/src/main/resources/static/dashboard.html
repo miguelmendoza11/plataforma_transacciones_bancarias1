@@ -15,11 +15,25 @@
               background: #e5e7eb; font-weight: 600; }
     #estado.conectado { background: #dcfce7; color: #166534; }
     #estado.desconectado { background: #fee2e2; color: #991b1b; }
+    form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; margin-bottom: 1.5rem;
+           padding: 1rem; background: #fff; border: 1px solid #e3e6eb; }
+    form label { display: flex; flex-direction: column; font-size: .85rem; gap: .25rem; }
+    form input, form button { padding: .4rem .6rem; font: inherit; }
+    #resultado.ok { color: #166534; }
+    #resultado.error { color: #991b1b; }
   </style>
 </head>
 <body>
   <h1>Ledger de transacciones</h1>
   <div id="estado">Conectando...</div>
+  <form id="formulario">
+    <label>De <input name="from_user" list="cuentas" required></label>
+    <label>Para <input name="to_user" list="cuentas" required></label>
+    <label>Monto <input name="amount" type="number" step="0.01" required></label>
+    <button type="submit">Enviar transferencia</button>
+    <span id="resultado"></span>
+  </form>
+  <datalist id="cuentas"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></datalist>
   <table>
     <thead><tr><th>tx_id</th><th>De</th><th>Para</th><th>Monto</th><th>Estado</th><th>Fraude</th></tr></thead>
     <tbody id="filas"></tbody>
@@ -63,6 +77,34 @@
     }
 
     conectar();
+
+    // el POST va a transaction-api (8080); el resultado real llega despues por el WebSocket
+    const formulario = document.getElementById('formulario');
+    const resultado = document.getElementById('resultado');
+    formulario.onsubmit = async (e) => {
+      e.preventDefault();
+      const datos = new FormData(formulario);
+      const cuerpo = { from_user: datos.get('from_user'), to_user: datos.get('to_user'),
+                       amount: Number(datos.get('amount')) };
+      try {
+        const resp = await fetch('http://localhost:8080/transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cuerpo)
+        });
+        const json = await resp.json();
+        if (resp.status === 202) {
+          resultado.textContent = 'Aceptada: ' + json.tx_id;
+          resultado.className = 'ok';
+        } else {
+          resultado.textContent = 'Error: ' + json.error;
+          resultado.className = 'error';
+        }
+      } catch (err) {
+        resultado.textContent = 'No se pudo contactar la API (localhost:8080)';
+        resultado.className = 'error';
+      }
+    };
   </script>
 </body>
 </html>
