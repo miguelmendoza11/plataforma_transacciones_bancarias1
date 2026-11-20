@@ -8,6 +8,14 @@ spring:
     consumer:
       group-id: dashboard-aggregator
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # tipo por defecto; el listener de fraud_alerts lo cambia a FraudAlertRecord
+        spring.json.value.default.type: com.banco.ledger.contracts.TransactionEventRecord
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.banco.ledger.contracts
 management:
   endpoints:
     web:
