@@ -1,5 +1,7 @@
 package com.banco.ledger.contracts;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -12,6 +14,7 @@ public enum Divisa {
     }
 
     /** Fail-Fast: rechaza codigos vacios o divisas que el banco no admite. */
+    @JsonCreator
     public static Divisa de(String codigo) {
         String valor = Validaciones.noVacio(codigo, "currency").toUpperCase(Locale.ROOT);
         return Arrays.stream(values())
