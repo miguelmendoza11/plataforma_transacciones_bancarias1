@@ -58,7 +58,7 @@ class TransaccionVistaTest {
         assertThat(marcada.sospechosa()).isTrue();
         assertThat(marcada.motivoFraude()).isEqualTo("HIGH_VALUE");
         assertThat(marcada.txId()).isEqualTo(original.txId());
-        assertThat(marcada.status()).isEqualTo(EstadoTransaccion.COMPLETED);
+        assertThat(marcada.status()).isEqualTo(EstadoTransaccion.SOSPECHOSA);
         assertThat(original.sospechosa()).isFalse();
         assertThat(original.motivoFraude()).isNull();
     }

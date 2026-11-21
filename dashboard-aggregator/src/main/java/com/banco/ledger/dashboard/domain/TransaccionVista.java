@@ -10,7 +10,7 @@ import java.util.Objects;
 
 /**
  * Modelo de lectura (lado Query de CQRS): una fila del dashboard.
- * Inmutable: marcarSospechosa() devuelve una vista nueva.
+ * Inmutable: marcarSospechosa() devuelve una vista nueva en estado SOSPECHOSA.
  */
 public record TransaccionVista(
         TxId txId,
@@ -41,6 +41,6 @@ public record TransaccionVista(
     }
 
     public TransaccionVista marcarSospechosa(String motivo) {
-        return new TransaccionVista(txId, fromUser, toUser, amount, status, true, motivo);
+        return new TransaccionVista(txId, fromUser, toUser, amount, EstadoTransaccion.SOSPECHOSA, true, motivo);
     }
 }

@@ -5,7 +5,6 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -24,7 +23,7 @@ class ManejadorErroresTest {
 
         // Assert
         assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(respuesta.getBody()).isEqualTo(Map.of("error", "No se puede transferir a la misma cuenta"));
+        assertThat(respuesta.getBody()).isEqualTo(new ErrorResponse("No se puede transferir a la misma cuenta"));
     }
 
     @Test
@@ -37,7 +36,7 @@ class ManejadorErroresTest {
 
         // Assert
         assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(respuesta.getBody()).isEqualTo(Map.of("error", "amount es obligatorio"));
+        assertThat(respuesta.getBody()).isEqualTo(new ErrorResponse("amount es obligatorio"));
     }
 
     @Test
@@ -51,7 +50,7 @@ class ManejadorErroresTest {
 
         // Assert
         assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(respuesta.getBody()).isEqualTo(Map.of("error", "from_user no puede ser nulo"));
+        assertThat(respuesta.getBody()).isEqualTo(new ErrorResponse("from_user no puede ser nulo"));
     }
 
     @Test
@@ -61,6 +60,6 @@ class ManejadorErroresTest {
 
         // Assert
         assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(respuesta.getBody()).isEqualTo(Map.of("error", "Solicitud invalida"));
+        assertThat(respuesta.getBody()).isEqualTo(new ErrorResponse("Solicitud invalida"));
     }
 }

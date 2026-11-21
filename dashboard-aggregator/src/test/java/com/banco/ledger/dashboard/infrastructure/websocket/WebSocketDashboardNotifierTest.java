@@ -65,7 +65,7 @@ class WebSocketDashboardNotifierTest {
         verify(session, times(1)).sendMessage(captor.capture());
         String esperado = """
                 {"tx_id":"tx-1","from_user":"A","to_user":"B","amount":20000.00,
-                 "status":"COMPLETED","sospechosa":true,"motivo_fraude":"HIGH_VALUE"}
+                 "status":"SOSPECHOSA","sospechosa":true,"motivo_fraude":"HIGH_VALUE"}
                 """;
         assertThat(objectMapper.readTree(captor.getValue().getPayload()))
                 .isEqualTo(objectMapper.readTree(esperado));

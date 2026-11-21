@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -37,7 +36,7 @@ class TransferControllerTest {
 
         // Assert
         assertThat(respuesta.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-        assertThat(respuesta.getBody()).isEqualTo(Map.of("tx_id", "tx-1"));
+        assertThat(respuesta.getBody()).isEqualTo(new TransferResponse("tx-1"));
         verify(service, times(1)).solicitar(request);
     }
 }
