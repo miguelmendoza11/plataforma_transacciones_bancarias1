@@ -34,9 +34,9 @@ POST /transfer
 | `fraud-detector` | Kafka stateful + Strategy → PostgreSQL → Kafka | **Miguel** | ✅ Hecho |
 | `transaction-api` | REST → RabbitMQ | Juanse | ✅ Hecho |
 | `dashboard-aggregator` | Kafka (2 topics) → vista materializada → WebSocket | Juanse | ✅ Hecho |
-| `notification-router` | Kafka → RabbitMQ | Andrés | 🟡 Esqueleto |
-| `ad-generator` | Tarea programada → RabbitMQ | Andrés | 🟡 Esqueleto |
-| `email-worker` | RabbitMQ consumer (servicio de **referencia**) | Andrés | ✅ Hecho |
+| `notification-router` | Kafka → Strategy de directorio → RabbitMQ (solo `COMPLETED`) | Andrés | ✅ Hecho |
+| `ad-generator` | `@Scheduled` + catálogo round-robin → RabbitMQ | Andrés | ✅ Hecho |
+| `email-worker` | RabbitMQ consumer ×3 réplicas, *fair dispatch* (servicio de **referencia**) | Andrés | ✅ Hecho |
 
 Cada servicio sigue arquitectura hexagonal:
 
