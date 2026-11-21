@@ -74,21 +74,15 @@ class TransferRequestTest {
 
     @Test
     void rechazaMontoCero() {
-        // Arrange
-        var request = new TransferRequest("A", "B", BigDecimal.ZERO);
-
-        // Act + Assert
-        assertThatThrownBy(() -> request.toComando(TX_ID, AHORA))
+        // Arrange + Act + Assert: lo rechaza el propio constructor compacto
+        assertThatThrownBy(() -> new TransferRequest("A", "B", BigDecimal.ZERO))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rechazaMontoNegativo() {
-        // Arrange
-        var request = new TransferRequest("A", "B", new BigDecimal("-5"));
-
-        // Act + Assert
-        assertThatThrownBy(() -> request.toComando(TX_ID, AHORA))
+        // Arrange + Act + Assert: lo rechaza el propio constructor compacto
+        assertThatThrownBy(() -> new TransferRequest("A", "B", new BigDecimal("-5")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
