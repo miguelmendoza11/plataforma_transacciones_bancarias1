@@ -45,12 +45,12 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 
 ## 🟢 Andrés — `notification-router` + `ad-generator` + `email-worker` + infraestructura Docker
 
-- [ ] Router: solo eventos `COMPLETED` → `EmailCommandRecord` → `email_queue` (puente Kafka → RabbitMQ).
-- [ ] `ad-generator`: `@Scheduled` + catálogo de anuncios → `email_queue`.
-- [ ] Mantener `email-worker` (ya implementado como referencia) y añadir su prueba de listener.
-- [ ] Dueño del `docker-compose.yml` y los Dockerfiles: verificar build de las 7 imágenes, límites `cpus`/`memory`, red `backend` interna vs `frontend`, healthchecks.
-- [ ] Evidencias de SO: `docker stats` con los límites aplicados, `docker compose logs email-worker` mostrando el balanceo entre las 3 réplicas, contenedor corriendo como `appuser` (`docker compose exec email-worker whoami`), prueba de OOM / `ExitOnOutOfMemoryError`.
-- [ ] Script `scripts/demo.sh` que lance los dos flujos del enunciado ($50 y $20.000).
+- [x] Router: solo eventos `COMPLETED` → `EmailCommandRecord` → `email_queue` (puente Kafka → RabbitMQ). Directorio de usuarios como Strategy (`DirectorioUsuarios`).
+- [x] `ad-generator`: `@Scheduled` + catálogo de anuncios (round-robin con `AtomicInteger`) → `email_queue`.
+- [x] Mantener `email-worker` (ya implementado como referencia) y añadir su prueba de listener. Se agregó `spring-boot-starter-json` a los 3 servicios: sin él no existía el bean `ObjectMapper` y no arrancaban.
+- [x] Dueño del `docker-compose.yml` y los Dockerfiles: build de las 7 imágenes verificado, límites `cpus`/`memory`, red `backend` interna vs `frontend`, healthchecks, y `restart: on-failure` en los servicios Spring.
+- [x] Evidencias de SO: `docker stats` con los límites aplicados, `docker compose logs email-worker` mostrando el balanceo entre las 3 réplicas, contenedor corriendo como `appuser` (`docker compose exec email-worker whoami`), prueba de OOM / `ExitOnOutOfMemoryError` (con `-Xmx8m`, sale con código 3). Guía en [`EVIDENCIAS-SO.md`](EVIDENCIAS-SO.md).
+- [ ] Script `scripts/demo.sh` que lance los dos flujos del enunciado ($50 y $20.000). El script está hecho; falta correrlo de punta a punta cuando `transaction-processor` arranque en Docker (le falta `spring-boot-starter-json`, ver aviso a Miguel).
 
 **Para la sustentación:** cgroups y límites de recursos, JVM en contenedores (`UseContainerSupport`, `MaxRAMPercentage`), usuario no privilegiado, Work Queues y *fair dispatch* (`prefetch: 1`), escalado horizontal.
 
