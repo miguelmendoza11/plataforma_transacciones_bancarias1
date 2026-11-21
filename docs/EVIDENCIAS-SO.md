@@ -81,10 +81,11 @@ con `-XX:MaxRAMPercentage=75.0`, deja el heap en ~288MiB en vez de calcularlo co
 ## 6. Prueba de OOM con `ExitOnOutOfMemoryError`
 
 ```bash
-docker compose run --rm -e JAVA_OPTS="-Xmx16m -XX:+ExitOnOutOfMemoryError" email-worker
+docker compose run --rm -e JAVA_OPTS="-Xmx8m -XX:+ExitOnOutOfMemoryError" email-worker
 ```
 
-Con solo 16 MB de heap Spring Boot no alcanza a arrancar. Debe verse:
+Con solo 8 MB de heap Spring Boot no alcanza a arrancar (con 12 MB o más sí arranca, lento, y se
+queda corriendo como una réplica más; si pasa eso, se para con Ctrl + C). Debe verse:
 
 ```
 Terminating due to java.lang.OutOfMemoryError: Java heap space
