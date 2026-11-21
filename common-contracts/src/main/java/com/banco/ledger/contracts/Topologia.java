@@ -12,7 +12,7 @@ public final class Topologia {
     /**
      * Dead Letter Queue de transfer_commands: los comandos que fallan 3 veces van aqui en vez de perderse.
      * OJO: transfer_commands se declara con x-dead-letter-exchange="" y
-     * x-dead-letter-routing-key=transfer_commands.dlq. TODO servicio que declare esa cola
+     * x-dead-letter-routing-key=transfer_commands.dlq. Cada servicio que declare esa cola
      * (transaction-api y transaction-processor) debe usar los MISMOS argumentos; si no,
      * RabbitMQ rechaza la declaracion con PRECONDITION_FAILED.
      */
