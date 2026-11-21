@@ -6,6 +6,8 @@ import com.banco.ledger.email.application.DespacharEmailService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 /**
  * Adaptador de entrada: consume la Work Queue email_queue. Varias replicas de este
  * servicio compiten por los mensajes (cada mensaje lo procesa UNA sola replica).
@@ -16,7 +18,7 @@ public class EmailQueueListener {
     private final DespacharEmailService despacharEmail;
 
     public EmailQueueListener(DespacharEmailService despacharEmail) {
-        this.despacharEmail = despacharEmail;
+        this.despacharEmail = Objects.requireNonNull(despacharEmail);
     }
 
     @RabbitListener(queues = Topologia.COLA_EMAIL)

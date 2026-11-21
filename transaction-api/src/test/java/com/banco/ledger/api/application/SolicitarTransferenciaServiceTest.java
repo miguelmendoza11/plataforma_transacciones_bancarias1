@@ -58,11 +58,8 @@ class SolicitarTransferenciaServiceTest {
 
     @Test
     void noPublicaSiElMontoEsInvalido() {
-        // Arrange
-        var request = new TransferRequest("A", "B", BigDecimal.ZERO);
-
-        // Act + Assert
-        assertThatThrownBy(() -> service.solicitar(request))
+        // Act + Assert: el request invalido ni siquiera se puede crear
+        assertThatThrownBy(() -> service.solicitar(new TransferRequest("A", "B", BigDecimal.ZERO)))
                 .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(publisher);
     }

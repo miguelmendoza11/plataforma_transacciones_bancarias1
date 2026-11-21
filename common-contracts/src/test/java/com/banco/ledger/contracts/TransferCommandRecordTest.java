@@ -13,12 +13,17 @@ class TransferCommandRecordTest {
 
     @Test
     void creaComandoValido() {
-        var cmd = new TransferCommandRecord(TxId.nuevo(), " A ", "B", CINCUENTA, Instant.now());
+        // Arrange
+        var txId = TxId.nuevo();
+        // Act
+        var cmd = new TransferCommandRecord(txId, " A ", "B", CINCUENTA, Instant.now());
+        // Assert
         assertThat(cmd.fromUser()).isEqualTo("A");
     }
 
     @Test
     void rechazaUsuarioVacio() {
+        // Act + Assert
         assertThatThrownBy(() -> new TransferCommandRecord(TxId.nuevo(), "  ", "B", CINCUENTA, Instant.now()))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("from_user");
@@ -26,12 +31,14 @@ class TransferCommandRecordTest {
 
     @Test
     void rechazaTransferenciaALaMismaCuenta() {
+        // Act + Assert
         assertThatThrownBy(() -> new TransferCommandRecord(TxId.nuevo(), "A", "a", CINCUENTA, Instant.now()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rechazaTxIdVacio() {
+        // Act + Assert
         assertThatThrownBy(() -> TxId.de(""))
                 .isInstanceOf(IllegalArgumentException.class);
     }

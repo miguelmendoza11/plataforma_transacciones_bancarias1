@@ -28,6 +28,7 @@ public record TransferRequest(
         fromUser = Validaciones.noVacio(fromUser, "from_user");
         toUser = Validaciones.noVacio(toUser, "to_user");
         Objects.requireNonNull(amount, "amount es obligatorio");
+        MontoDinero.de(amount); // Fail-Fast: un monto <= 0 se rechaza aqui, en la entrada
         currency = Objects.requireNonNullElse(currency, Divisa.porDefecto());
     }
 
@@ -35,7 +36,7 @@ public record TransferRequest(
         this(fromUser, toUser, amount, null);
     }
 
-    // monto <= 0 y misma cuenta los rechazan MontoDinero y TransferCommandRecord
+    // la misma cuenta la rechaza TransferCommandRecord
     public TransferCommandRecord toComando(TxId txId, Instant solicitadaEn) {
         return new TransferCommandRecord(txId, fromUser, toUser, MontoDinero.de(amount), solicitadaEn);
     }

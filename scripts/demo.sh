@@ -34,6 +34,8 @@ transferir "Flujo 2 - fraude (\$20.000)"   '{"from_user":"A","to_user":"B","amou
 
 echo
 echo "Que revisar ahora:"
-echo "  1. Dashboard: http://localhost:8081/dashboard.html  (la de \$20.000 debe salir en rojo: HIGH_VALUE)"
+echo "  1. Dashboard: http://localhost:8081/dashboard.html  (la de \$20.000 debe salir en rojo, Estado SOSPECHOSA y Fraude HIGH_VALUE)"
 echo "  2. Correos:   docker compose logs -f email-worker  (ENVIANDO EMAIL a [user_a@email.com]: [Envió \$50.00 a B] ...)"
 echo "  3. Consola RabbitMQ: http://localhost:15672 (guest / guest)"
+echo "  4. Divisa no admitida (debe responder 400):"
+echo "     curl -X POST $API_URL/transfer -H 'Content-Type: application/json' -d '{\"from_user\":\"A\",\"to_user\":\"B\",\"amount\":50,\"currency\":\"USD\"}'"
