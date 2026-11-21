@@ -35,6 +35,7 @@ class DespacharEmailServiceTest {
 
     @Test
     void rechazaComandoNulo() {
+        // Act + Assert
         assertThatThrownBy(() -> service.despachar(null)).isInstanceOf(NullPointerException.class);
         verifyNoInteractions(emailSender);
     }
