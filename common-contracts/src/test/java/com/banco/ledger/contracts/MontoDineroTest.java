@@ -26,18 +26,26 @@ class MontoDineroTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-1", "-0.01"})
     void rechazaMontosNoPositivos(String valor) {
+        // Act + Assert
         assertThatThrownBy(() -> MontoDinero.de(valor))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void rechazaNulo() {
+        // Act + Assert
         assertThatThrownBy(() -> new MontoDinero(null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void comparaMontos() {
-        assertThat(MontoDinero.de("20000").esMayorQue(MontoDinero.de("10000"))).isTrue();
+        // Arrange
+        var veinteMil = MontoDinero.de("20000");
+        var diezMil = MontoDinero.de("10000");
+        // Act
+        boolean mayor = veinteMil.esMayorQue(diezMil);
+        // Assert
+        assertThat(mayor).isTrue();
     }
 }
