@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -25,8 +24,8 @@ public class TransferController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<Map<String, String>> transferir(@RequestBody TransferRequest request) {
+    public ResponseEntity<TransferResponse> transferir(@RequestBody TransferRequest request) {
         TxId txId = service.solicitar(request);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of("tx_id", txId.valor()));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new TransferResponse(txId.valor()));
     }
 }
