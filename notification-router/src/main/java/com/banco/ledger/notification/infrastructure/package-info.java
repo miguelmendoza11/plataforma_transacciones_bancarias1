@@ -1,7 +1,4 @@
 /**
- * TODO (Andres):
- *  - @KafkaListener sobre transactions_log (group notification-router) con JsonDeserializer
- *    hacia TransactionEventRecord.
- *  - RabbitEmailCommandPublisher implements EmailCommandPublisher (ver RabbitConfig de email-worker).
+ * Adaptadores del router: listener de Kafka (transactions_log) y publicador hacia email_queue.
  */
 package com.banco.ledger.notification.infrastructure;

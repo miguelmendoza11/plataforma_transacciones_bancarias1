@@ -26,7 +26,7 @@ spring:
     password: ${DB_PASSWORD:ledger}
   jpa:
     hibernate:
-      ddl-auto: update   # TODO: cambiar a validate cuando haya script SQL definitivo
+      ddl-auto: update   # Hibernate crea las tablas al arrancar
     open-in-view: false
 fraud:
   umbral-alto-valor: 10000
