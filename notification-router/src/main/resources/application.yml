@@ -1,0 +1,27 @@
+server:
+  port: 8084
+spring:
+  application:
+    name: notification-router
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-router
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: com.banco.ledger.contracts.TransactionEventRecord
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.banco.ledger.contracts
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

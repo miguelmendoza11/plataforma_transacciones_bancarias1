@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ledger en tiempo real</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #f6f7f9; color: #1d2330; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: .5rem .75rem; border-bottom: 1px solid #e3e6eb; text-align: left; }
+    td.monto { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.sospechosa { background: #fde2e2; color: #a40000; font-weight: 600; }
+    tr.rechazada { color: #6b7280; }
+    #estado { display: inline-block; margin-bottom: 1rem; padding: .25rem .75rem; border-radius: 999px;
+              background: #e5e7eb; font-weight: 600; }
+    #estado.conectado { background: #dcfce7; color: #166534; }
+    #estado.desconectado { background: #fee2e2; color: #991b1b; }
+    form { display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; margin-bottom: 1.5rem;
+           padding: 1rem; background: #fff; border: 1px solid #e3e6eb; }
+    form label { display: flex; flex-direction: column; font-size: .85rem; gap: .25rem; }
+    form input, form button { padding: .4rem .6rem; font: inherit; }
+    #resultado.ok { color: #166534; }
+    #resultado.error { color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>Ledger de transacciones</h1>
+  <div id="estado">Conectando...</div>
+  <form id="formulario">
+    <label>De <input name="from_user" list="cuentas" required></label>
+    <label>Para <input name="to_user" list="cuentas" required></label>
+    <label>Monto <input name="amount" type="number" step="0.01" required></label>
+    <button type="submit">Enviar transferencia</button>
+    <span id="resultado"></span>
+  </form>
+  <datalist id="cuentas"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option></datalist>
+  <table>
+    <thead><tr><th>tx_id</th><th>De</th><th>Para</th><th>Monto</th><th>Estado</th><th>Fraude</th></tr></thead>
+    <tbody id="filas"></tbody>
+  </table>
+  <script>
+    // Mensajes del backend: { tx_id, from_user, to_user, amount, status, sospechosa, motivo_fraude }
+    const filas = document.getElementById('filas');
+    const estado = document.getElementById('estado');
+    const formatoMonto = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function pintar(tx) {
+      // una fila por tx_id: si ya existe se actualiza (ej. cuando llega la alerta de fraude)
+      let fila = document.getElementById(tx.tx_id);
+      if (!fila) {
+        fila = document.createElement('tr');
+        fila.id = tx.tx_id;
+        filas.prepend(fila);
+      }
+      fila.className = tx.sospechosa ? 'sospechosa' : (tx.status === 'REJECTED' ? 'rechazada' : '');
+      fila.innerHTML = '';
+      const celdas = [tx.tx_id, tx.from_user, tx.to_user, '$' + formatoMonto.format(tx.amount),
+                      tx.status, tx.sospechosa ? tx.motivo_fraude : ''];
+      celdas.forEach((v, i) => {
+        const td = document.createElement('td');
+        td.textContent = v ?? '';
+        if (i === 3) td.className = 'monto';
+        fila.appendChild(td);
+      });
+    }
+
+    function conectar() {
+      const ws = new WebSocket(`ws://${location.hostname || 'localhost'}:8081/ws/transactions`);
+      ws.onopen = () => { estado.textContent = 'Conectado'; estado.className = 'conectado'; };
+      ws.onmessage = (msg) => pintar(JSON.parse(msg.data));
+      ws.onclose = () => {
+        estado.textContent = 'Desconectado (reintentando...)';
+        estado.className = 'desconectado';
+        // al reconectar el servidor vuelve a mandar el snapshot
+        setTimeout(conectar, 3000);
+      };
+    }
+
+    conectar();
+
+    // el POST va a transaction-api (8080); el resultado real llega despues por el WebSocket
+    const formulario = document.getElementById('formulario');
+    const resultado = document.getElementById('resultado');
+    formulario.onsubmit = async (e) => {
+      e.preventDefault();
+      const datos = new FormData(formulario);
+      const cuerpo = { from_user: datos.get('from_user'), to_user: datos.get('to_user'),
+                       amount: Number(datos.get('amount')) };
+      try {
+        const resp = await fetch('http://localhost:8080/transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cuerpo)
+        });
+        const json = await resp.json();
+        if (resp.status === 202) {
+          resultado.textContent = 'Aceptada: ' + json.tx_id;
+          resultado.className = 'ok';
+        } else {
+          resultado.textContent = 'Error: ' + json.error;
+          resultado.className = 'error';
+        }
+      } catch (err) {
+        resultado.textContent = 'No se pudo contactar la API (localhost:8080)';
+        resultado.className = 'error';
+      }
+    };
+  </script>
+</body>
+</html>

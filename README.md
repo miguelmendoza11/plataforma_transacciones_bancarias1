@@ -29,14 +29,14 @@ POST /transfer
 
 | Módulo | Rol | Responsable | Estado |
 |---|---|---|---|
-| `common-contracts` | Records inmutables compartidos (`TransferCommandRecord`, `TransactionEventRecord`, `FraudAlertRecord`, `EmailCommandRecord`, `MontoDinero`, `TxId`) | Todos | ✅ Hecho |
-| `transaction-processor` | Rabbit → dominio rico (State/Strategy) → PostgreSQL → Kafka | **Miguel** | 🟡 Esqueleto |
-| `fraud-detector` | Kafka stateful + Strategy → PostgreSQL → Kafka | **Miguel** | 🟡 Esqueleto |
-| `transaction-api` | REST → RabbitMQ | Juanse | 🟡 Esqueleto |
-| `dashboard-aggregator` | Kafka (2 topics) → vista materializada → WebSocket | Juanse | 🟡 Esqueleto |
-| `notification-router` | Kafka → RabbitMQ | Andrés | 🟡 Esqueleto |
-| `ad-generator` | Tarea programada → RabbitMQ | Andrés | 🟡 Esqueleto |
-| `email-worker` | RabbitMQ consumer (servicio de **referencia**) | Andrés | ✅ Hecho |
+| `common-contracts` | Records inmutables compartidos (`TransferCommandRecord`, `TransactionEventRecord`, `FraudAlertRecord`, `EmailCommandRecord`, `MontoDinero`, `TxId`) y divisas admitidas (`Divisa`, solo COP) | Todos | ✅ Hecho |
+| `transaction-processor` | Rabbit → dominio rico (State/Strategy) → PostgreSQL → Kafka | **Miguel** | ✅ Hecho |
+| `fraud-detector` | Kafka stateful + Strategy → PostgreSQL → Kafka | **Miguel** | ✅ Hecho |
+| `transaction-api` | REST → RabbitMQ | Juanse | ✅ Hecho |
+| `dashboard-aggregator` | Kafka (2 topics) → vista materializada → WebSocket | Juanse | ✅ Hecho |
+| `notification-router` | Kafka → Strategy de directorio → RabbitMQ (solo `COMPLETED`) | Andrés | ✅ Hecho |
+| `ad-generator` | `@Scheduled` + catálogo round-robin → RabbitMQ | Andrés | ✅ Hecho |
+| `email-worker` | RabbitMQ consumer ×3 réplicas, *fair dispatch* (servicio de **referencia**) | Andrés | ✅ Hecho |
 
 Cada servicio sigue arquitectura hexagonal:
 
@@ -66,9 +66,19 @@ docker compose up --build
 curl -X POST localhost:8080/transfer -H 'Content-Type: application/json' -d '{"from_user":"A","to_user":"B","amount":50}'
 ```
 
-- Dashboard: http://localhost:8081/dashboard.html
+`currency` es opcional: si no viene se asume `COP`; cualquier otra divisa responde `400`.
+Las cuentas de la demo son A, B, C, D y E con $1.000.000,00.
+
+Para lanzar los dos flujos del enunciado ($50 y $20.000) de una vez (en Windows, con Git Bash):
+
+```bash
+bash scripts/demo.sh
+```
+
+- Dashboard: http://localhost:8081/dashboard.html (la de $20.000 sale en rojo como `SOSPECHOSA`)
 - Consola RabbitMQ: http://localhost:15672 (guest / guest)
 - Ver el reparto entre réplicas: `docker compose logs -f email-worker`
+- Evidencias de Sistemas Operativos: [`docs/EVIDENCIAS-SO.md`](docs/EVIDENCIAS-SO.md)
 
 ## Convenciones
 

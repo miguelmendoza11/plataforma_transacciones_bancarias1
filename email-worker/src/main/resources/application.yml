@@ -1,0 +1,18 @@
+server:
+  port: 8086
+spring:
+  application:
+    name: email-worker
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        prefetch: 1   # reparto justo entre replicas (fair dispatch)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

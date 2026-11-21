@@ -1,0 +1,17 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: ad-generator
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+ads:
+  intervalo-ms: 30000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
