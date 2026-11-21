@@ -25,18 +25,22 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 - [x] Persistir alertas (`AlertaFraude` / `RegistroAuditoria`) en PostgreSQL y publicar en `fraud_alerts`.
 - [x] Pruebas de cada regla (la ventana usa la hora del evento; el servicio usa un `Clock` inyectado) y del servicio con Mockito.
 
+**Integración final**
+- [x] Validación Fail-Fast de divisas: `Divisa` (solo COP) en `common-contracts` y `currency` opcional en `TransferRequest` (una divisa no admitida responde 400).
+- [x] `spring-boot-starter-json` en `transaction-processor` para que arranque en Docker (mismo problema del `ObjectMapper` que tenían los servicios de Andrés).
+
 **Para la sustentación:** CQRS/Event Sourcing, por qué Kafka es la fuente de verdad, garantías *at-least-once* + idempotencia, condiciones de carrera y bloqueo optimista.
 
 ---
 
 ## 🟡 Juanse — `transaction-api` + `dashboard-aggregator` + `dashboard.html`
 
-- [x] `POST /transfer` → `TransferCommandRecord` con validación Fail-Fast → 202 con `tx_id`; errores → 400 (`@RestControllerAdvice`).
+- [x] `POST /transfer` → `TransferCommandRecord` con validación Fail-Fast → 202 con `tx_id`; errores → 400 (`@RestControllerAdvice`). Entrada y respuestas como records (`TransferRequest`, `TransferResponse`, `ErrorResponse`).
 - [x] Adaptador `RabbitTransferCommandPublisher` (cola `transfer_commands`, declarada con la misma Dead Letter Queue que el processor).
 - [x] Vista materializada en memoria (lado *Query* de CQRS) con dos `@KafkaListener` (`transactions_log`, `fraud_alerts`).
 - [x] Caso borde: alerta que llega antes que la transacción (no hay orden entre topics); se guarda como pendiente dentro de `compute()`.
 - [x] WebSocket en `:8081` (`/ws/transactions`): snapshot al conectar + cambios incrementales.
-- [x] Terminar `dashboard.html` (ya tiene base): filas en rojo para sospechosas con su motivo; formulario para enviar transferencias (CORS en la API).
+- [x] Terminar `dashboard.html` (ya tiene base): filas en rojo para sospechosas con su motivo y estado `SOSPECHOSA`; formulario para enviar transferencias (CORS en la API).
 - [x] Pruebas: `TransferRequest` inválidos, servicios con Mockito, vista materializada pura (incluida una prueba concurrente) y adaptadores (Rabbit, listeners, WebSocket).
 
 **Para la sustentación:** comunicación síncrona vs. asíncrona, *consumer groups*, push vía WebSocket, consistencia eventual.
@@ -50,7 +54,7 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 - [x] Mantener `email-worker` (ya implementado como referencia) y añadir su prueba de listener. Se agregó `spring-boot-starter-json` a los 3 servicios: sin él no existía el bean `ObjectMapper` y no arrancaban.
 - [x] Dueño del `docker-compose.yml` y los Dockerfiles: build de las 7 imágenes verificado, límites `cpus`/`memory`, red `backend` interna vs `frontend`, healthchecks, y `restart: on-failure` en los servicios Spring.
 - [x] Evidencias de SO: `docker stats` con los límites aplicados, `docker compose logs email-worker` mostrando el balanceo entre las 3 réplicas, contenedor corriendo como `appuser` (`docker compose exec email-worker whoami`), prueba de OOM / `ExitOnOutOfMemoryError` (con `-Xmx8m`, sale con código 3). Guía en [`EVIDENCIAS-SO.md`](EVIDENCIAS-SO.md).
-- [ ] Script `scripts/demo.sh` que lance los dos flujos del enunciado ($50 y $20.000). El script está hecho; falta correrlo de punta a punta cuando `transaction-processor` arranque en Docker (le falta `spring-boot-starter-json`, ver aviso a Miguel).
+- [x] Script `scripts/demo.sh` que lance los dos flujos del enunciado ($50 y $20.000). Verificado de punta a punta en Docker: la de $20.000 sale como `SOSPECHOSA` en el dashboard y los correos se reparten entre las 3 réplicas.
 
 **Para la sustentación:** cgroups y límites de recursos, JVM en contenedores (`UseContainerSupport`, `MaxRAMPercentage`), usuario no privilegiado, Work Queues y *fair dispatch* (`prefetch: 1`), escalado horizontal.
 
@@ -65,8 +69,10 @@ Peso aproximado: Miguel ~45 % · Juanse ~30 % · Andrés ~25 %.
 
 ## Flujo de Git
 
-- Una rama por persona/servicio (`feature/processor`, `feature/dashboard`, …) → Pull Request a `Develop`.
-- `mvn test` debe pasar antes de cada merge.
+- `main` no se toca durante el desarrollo; `Develop` es la rama de integración (sin commits directos en ninguna de las dos).
+- Cada tarea es una rama `feature/<nombre>` que sale de `Develop` actualizado, con commits pequeños en inglés (`feat:`, `fix:`, `test:`, `docs:`…).
+- Vuelve a `Develop` por Pull Request, aprobado por otro integrante y mergeado con **"Create a merge commit"** (nunca squash ni rebase).
+- `mvn test` debe pasar antes de cada commit y de cada merge.
 - Cambios en `common-contracts` o `docker-compose.yml` siempre por PR revisado por otro integrante.
 
 ## Effective Java (3.ª ed.) — ítems que aplican directamente
