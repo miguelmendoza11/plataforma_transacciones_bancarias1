@@ -3,11 +3,13 @@ package com.banco.ledger.ads.infrastructure.config;
 import com.banco.ledger.ads.domain.CatalogoAnuncios;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.List;
 
-/** Registra el catalogo de anuncios (el dominio no conoce Spring). */
+/** Registra el catalogo de anuncios (el dominio no conoce Spring) y activa @Scheduled. */
 @Configuration
+@EnableScheduling
 public class AdsConfig {
 
     @Bean
